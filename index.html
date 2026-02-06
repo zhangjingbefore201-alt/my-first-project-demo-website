@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Interactive Image Demo</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; padding: 24px; max-width: 760px; margin: 0 auto; }
+    .card { border: 1px solid #e6e6e6; border-radius: 12px; padding: 16px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    input[type="file"] { padding: 8px; }
+    textarea { width: 100%; min-height: 88px; padding: 10px; border-radius: 10px; border: 1px solid #ddd; }
+    button { padding: 10px 14px; border: 0; border-radius: 10px; cursor: pointer; }
+    button.primary { background: #111; color: #fff; }
+    button.ghost { background: #f3f3f3; }
+    img { max-width: 100%; border-radius: 12px; border: 1px solid #eee; display: none; margin-top: 12px; }
+    .hint { color: #666; font-size: 13px; }
+    .out { margin-top: 10px; padding: 10px 12px; background: #fafafa; border: 1px dashed #ddd; border-radius: 10px; display: none; }
+  </style>
+</head>
+<body>
+  <h2>可交互 Demo：上传图片 + 备注</h2>
+  <p class="hint">选择图片后会在页面中预览；输入备注点击“提交”会显示你的内容。</p>
+
+  <div class="card">
+    <div class="row">
+      <input id="file" type="file" accept="image/*" />
+      <button class="ghost" id="clearBtn" type="button">清空</button>
+    </div>
+
+    <img id="preview" alt="preview" />
+
+    <div style="margin-top:14px;">
+      <label for="note" class="hint">备注（可选）</label>
+      <textarea id="note" placeholder="例如：这张图想验证右侧 AI 面板的交互…"></textarea>
+      <div class="row" style="margin-top:10px; justify-content:flex-end;">
+        <button class="primary" id="submitBtn" type="button">提交</button>
+      </div>
+      <div class="out" id="output"></div>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('file');
+    const preview = document.getElementById('preview');
+    const note = document.getElementById('note');
+    const output = document.getElementById('output');
+    const clearBtn = document.getElementById('clearBtn');
+    const submitBtn = document.getElementById('submitBtn');
+
+    let currentUrl = '';
+
+    fileInput.addEventListener('change', () => {
+      const f = fileInput.files?.[0];
+      if (!f) return;
+      if (currentUrl) URL.revokeObjectURL(currentUrl);
+      currentUrl = URL.createObjectURL(f);
+      preview.src = currentUrl;
+      preview.style.display = 'block';
+    });
+
+    submitBtn.addEventListener('click', () => {
+      const text = note.value.trim();
+      const hasImg = preview.style.display === 'block';
+      if (!hasImg && !text) {
+        alert('请先选择一张图片，或输入一段备注。');
+        return;
+      }
+      output.style.display = 'block';
+      output.innerHTML = `
+        <div><b>已提交</b></div>
+        <div style="margin-top:6px;color:#444;">${text ? text.replaceAll('<','&lt;').replaceAll('>','&gt;') : '（无备注）'}</div>
+      `;
+      output.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+
+    clearBtn.addEventListener('click', () => {
+      fileInput.value = '';
+      note.value = '';
+      output.style.display = 'none';
+      if (currentUrl) URL.revokeObjectURL(currentUrl);
+      currentUrl = '';
+      preview.removeAttribute('src');
+      preview.style.display = 'none';
